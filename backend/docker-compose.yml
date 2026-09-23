@@ -1,0 +1,12 @@
+services:
+  api:
+    container_name: pdf-search-api
+    build: .
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./storage:/app/storage
+      - ./app:/app/app
+    env_file:
+      - .env
+    restart: unless-stopped
