@@ -62,7 +62,7 @@ export function useChat() {
       documentId,
       message,
     }: {
-      documentId: string;
+      documentId: string | null;
       message: string;
     }) => chatWithDocument(documentId, message),
   });

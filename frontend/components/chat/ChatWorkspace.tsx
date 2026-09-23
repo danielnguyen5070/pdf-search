@@ -19,29 +19,43 @@ import type { Document } from "@/types/api";
 export function ChatWorkspace() {
   const [uploadOpen, setUploadOpen] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
-  const [selectedId, setSelectedId] = useState<string | null>(null);
+  // null = All Documents (default)
+  const [selectedDocumentId, setSelectedDocumentId] = useState<string | null>(
+    null
+  );
 
   const { data, isLoading, isError, error, refetch } = useDocuments();
   const documents = data ?? [];
 
   const selectedDocument =
-    documents.find((doc) => doc.id === selectedId) ?? null;
+    selectedDocumentId === null
+      ? null
+      : (documents.find((doc) => doc.id === selectedDocumentId) ?? null);
 
-  // Clear selection if the selected document was deleted.
+  // Clear selection if the selected document was deleted → fall back to All Documents.
   useEffect(() => {
-    if (selectedId && !documents.some((doc) => doc.id === selectedId)) {
-      setSelectedId(null);
+    if (
+      selectedDocumentId &&
+      !documents.some((doc) => doc.id === selectedDocumentId)
+    ) {
+      setSelectedDocumentId(null);
     }
-  }, [documents, selectedId]);
+  }, [documents, selectedDocumentId]);
+
+  const handleSelectAll = () => {
+    setSelectedDocumentId(null);
+    setMobileOpen(false);
+  };
 
   const handleSelect = (document: Document) => {
-    setSelectedId(document.id);
+    setSelectedDocumentId(document.id);
     setMobileOpen(false);
   };
 
   const sidebarProps = {
     documents,
-    selectedId,
+    selectedId: selectedDocumentId,
+    onSelectAll: handleSelectAll,
     onSelect: handleSelect,
     onUpload: () => {
       setMobileOpen(false);
@@ -73,6 +87,7 @@ export function ChatWorkspace() {
 
       <ChatPanel
         document={selectedDocument}
+        selectedDocumentId={selectedDocumentId}
         headerActions={
           <Button
             type="button"
@@ -90,7 +105,7 @@ export function ChatWorkspace() {
       <UploadDocumentDialog
         open={uploadOpen}
         onOpenChange={setUploadOpen}
-        onUploaded={(doc) => setSelectedId(doc.id)}
+        onUploaded={(doc) => setSelectedDocumentId(doc.id)}
       />
     </div>
   );

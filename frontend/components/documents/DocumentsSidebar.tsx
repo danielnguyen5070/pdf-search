@@ -1,6 +1,6 @@
 "use client";
 
-import { FileText, Upload } from "lucide-react";
+import { Upload } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { DocumentList } from "@/components/documents/DocumentList";
@@ -11,6 +11,7 @@ import type { Document } from "@/types/api";
 interface DocumentsSidebarProps {
   documents: Document[];
   selectedId: string | null;
+  onSelectAll: () => void;
   onSelect: (document: Document) => void;
   onUpload: () => void;
   isLoading?: boolean;
@@ -23,6 +24,7 @@ interface DocumentsSidebarProps {
 export function DocumentsSidebar({
   documents,
   selectedId,
+  onSelectAll,
   onSelect,
   onUpload,
   isLoading,
@@ -31,6 +33,8 @@ export function DocumentsSidebar({
   onRetry,
   className,
 }: DocumentsSidebarProps) {
+  const allDocumentsSelected = selectedId === null;
+
   return (
     <aside
       className={`flex h-full min-h-0 w-full flex-col bg-background ${className ?? ""}`}
@@ -64,25 +68,13 @@ export function DocumentsSidebar({
               onRetry={onRetry}
             />
           </div>
-        ) : documents.length === 0 ? (
-          <div className="flex h-full flex-col items-center justify-center px-4 text-center">
-            <div className="mb-3 flex size-10 items-center justify-center rounded-full bg-muted">
-              <FileText className="size-5 text-muted-foreground" />
-            </div>
-            <p className="text-sm font-medium">No documents yet</p>
-            <p className="mt-1 text-xs text-muted-foreground">
-              Upload a PDF to get started.
-            </p>
-            <Button className="mt-4" size="sm" onClick={onUpload}>
-              <Upload className="size-3.5" />
-              Upload PDF
-            </Button>
-          </div>
         ) : (
           <ScrollArea className="h-full">
             <DocumentList
               documents={documents}
               selectedId={selectedId}
+              allDocumentsSelected={allDocumentsSelected}
+              onSelectAll={onSelectAll}
               onSelect={onSelect}
             />
           </ScrollArea>

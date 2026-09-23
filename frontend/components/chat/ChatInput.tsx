@@ -56,7 +56,6 @@ export function ChatInput({
         </div>
         <p className="mt-1.5 px-1 text-[11px] text-muted-foreground">
           Enter to send · Shift+Enter for new line
-          {disabled ? " · Select a document to chat" : ""}
         </p>
       </div>
     </div>

@@ -8,12 +8,14 @@ import type { ChatMessage as ChatMessageType } from "@/types/api";
 
 interface ChatMessageListProps {
   messages: ChatMessageType[];
-  hasDocument: boolean;
+  allDocuments?: boolean;
+  documentName?: string | null;
 }
 
 export function ChatMessageList({
   messages,
-  hasDocument,
+  allDocuments = false,
+  documentName = null,
 }: ChatMessageListProps) {
   const bottomRef = useRef<HTMLDivElement>(null);
 
@@ -28,14 +30,14 @@ export function ChatMessageList({
           <MessageSquareText className="size-5 text-muted-foreground" />
         </div>
         <h3 className="text-base font-medium tracking-tight">
-          {hasDocument
-            ? "Ask a question"
-            : "Select a document and ask a question"}
+          Ask a question
         </h3>
         <p className="mt-1.5 max-w-sm text-sm text-muted-foreground">
-          {hasDocument
-            ? "Your conversation will appear here. Chat API is not connected yet."
-            : "Choose a PDF from the sidebar to start chatting."}
+          {allDocuments
+            ? "Your conversation will search across all uploaded PDFs."
+            : documentName
+              ? `Ask anything about ${documentName}.`
+              : "Choose a PDF from the sidebar or stay on All Documents."}
         </p>
       </div>
     );

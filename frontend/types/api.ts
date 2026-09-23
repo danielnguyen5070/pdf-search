@@ -22,7 +22,8 @@ export interface DocumentDeleteResult {
 }
 
 export interface ChatRequest {
-  document_id: string;
+  /** null = search across all documents */
+  document_id: string | null;
   message: string;
 }
 

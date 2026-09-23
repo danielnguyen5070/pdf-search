@@ -86,7 +86,13 @@ export function DocumentCard({
         </div>
 
         <div className="min-w-0 flex-1">
-          <p className="truncate text-sm font-medium leading-snug">
+          <p className="flex items-center gap-1.5 truncate text-sm font-medium leading-snug">
+            {selected ? (
+              <span
+                className="inline-block size-1.5 shrink-0 rounded-full bg-foreground"
+                aria-hidden
+              />
+            ) : null}
             {document.filename}
           </p>
           <p className="mt-0.5 truncate text-xs text-muted-foreground">
