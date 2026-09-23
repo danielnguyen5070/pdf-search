@@ -1,0 +1,52 @@
+---
+description: Git commit protocol — only commit when asked; safe staging and message style
+alwaysApply: true
+---
+
+# Git Commits
+
+Only create commits when the user explicitly asks. If unclear, ask first. Never push unless asked.
+
+## Safety
+
+- NEVER update git config
+- NEVER use destructive/irreversible commands (`push --force`, `hard reset`, etc.) unless explicitly requested
+- NEVER skip hooks (`--no-verify`, `--no-gpg-sign`, etc.) unless explicitly requested
+- NEVER force-push to `main`/`master`; warn if asked
+- NEVER use interactive flags (`-i`) — they are unsupported
+- Do not commit secrets (`.env`, credentials, keys); warn if asked to include them
+- Do not create empty commits when there is nothing to commit
+
+## Amend — only when ALL are true
+
+1. User explicitly requested amend, OR commit succeeded but a hook auto-modified files that must be included
+2. HEAD commit was created by you in this conversation
+3. Commit has NOT been pushed to remote
+
+If commit failed or was rejected by a hook: fix and create a **new** commit — never amend.
+
+## When committing
+
+Run in parallel first:
+
+1. `git status` (staged, unstaged, untracked)
+2. `git diff` (staged and unstaged)
+3. `git log -8 --oneline` (match message style)
+
+Then:
+
+1. Stage only relevant files (never secrets)
+2. Commit with a HEREDOC message focused on **why**, 1–2 sentences:
+
+```bash
+git commit -m "$(cat <<'EOF'
+Summarize the why in one line.
+
+Optional second sentence for context if needed.
+EOF
+)"
+```
+
+3. `git status` to verify success
+
+Message verbs: `add` (new), `update` (enhance), `fix` (bug). Match the repo's existing style.

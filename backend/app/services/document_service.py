@@ -9,6 +9,8 @@ from uuid import UUID
 from fastapi import HTTPException, UploadFile, status
 
 from app.config import Settings, get_settings
+from app.services.chunk_service import chunk_pages
+from app.services.pdf_parser import parse_pdf
 
 
 class DocumentService:
@@ -83,6 +85,10 @@ class DocumentService:
 
         absolute_path.write_bytes(content)
 
+        # Parse + chunk in memory (no separate text/chunk files yet).
+        pages = parse_pdf(absolute_path, str(document_id))
+        chunks = chunk_pages(pages)
+
         created_at = datetime.now(timezone.utc)
         record: dict[str, Any] = {
             "id": str(document_id),
@@ -91,6 +97,8 @@ class DocumentService:
             "size": len(content),
             "path": str(relative_path).replace("\\", "/"),
             "created_at": created_at.isoformat().replace("+00:00", "Z"),
+            "page_count": len(pages),
+            "chunk_count": len(chunks),
         }
 
         with self._lock:
