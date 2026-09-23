@@ -16,6 +16,11 @@ export interface DocumentUploadResult {
   chunks: number;
 }
 
+export interface DocumentDeleteResult {
+  id: string;
+  status: "deleted";
+}
+
 export interface ChatRequest {
   document_id: string;
   message: string;

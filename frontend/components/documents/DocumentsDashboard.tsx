@@ -35,7 +35,7 @@ export function DocumentsDashboard() {
             Your Documents
           </h2>
           <p className="mt-1 text-sm text-muted-foreground">
-            Upload a PDF to store it on the server.
+            Upload and manage PDFs stored on the server.
           </p>
         </div>
 

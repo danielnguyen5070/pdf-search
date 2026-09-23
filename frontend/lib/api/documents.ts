@@ -1,5 +1,9 @@
 import { apiFetch } from "@/lib/api/client";
-import type { Document, DocumentUploadResult } from "@/types/api";
+import type {
+  Document,
+  DocumentDeleteResult,
+  DocumentUploadResult,
+} from "@/types/api";
 
 export async function getDocuments(): Promise<Document[]> {
   const data = await apiFetch<Document[] | { documents: Document[] }>(
@@ -27,5 +31,19 @@ export async function uploadDocument(file: File): Promise<DocumentUploadResult> 
       body: formData,
     },
     "upload"
+  );
+}
+
+/**
+ * Delete a PDF and its Weaviate chunks.
+ * DELETE ${NEXT_PUBLIC_API_URL}/documents/{documentId}
+ */
+export async function deleteDocument(
+  documentId: string
+): Promise<DocumentDeleteResult> {
+  return apiFetch<DocumentDeleteResult>(
+    `/documents/${documentId}`,
+    { method: "DELETE" },
+    "not_found"
   );
 }
