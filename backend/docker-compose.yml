@@ -9,4 +9,46 @@ services:
       - ./app:/app/app
     env_file:
       - .env
+    environment:
+      # Inside Docker Compose, reach Weaviate by service name.
+      # From the host (local uvicorn), use http://localhost:8080.
+      WEAVIATE_URL: http://weaviate:8080
+      WEAVIATE_GRPC_PORT: "50051"
+    depends_on:
+      weaviate:
+        condition: service_healthy
     restart: unless-stopped
+
+  weaviate:
+    container_name: pdf-search-weaviate
+    image: cr.weaviate.io/semitechnologies/weaviate:1.28.4
+    ports:
+      - "8080:8080"
+      - "50051:50051"
+    volumes:
+      - weaviate_data:/var/lib/weaviate
+    environment:
+      QUERY_DEFAULTS_LIMIT: 25
+      AUTHENTICATION_ANONYMOUS_ACCESS_ENABLED: "true"
+      PERSISTENCE_DATA_PATH: "/var/lib/weaviate"
+      DEFAULT_VECTORIZER_MODULE: "none"
+      ENABLE_MODULES: ""
+      CLUSTER_HOSTNAME: "node1"
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "wget",
+          "--no-verbose",
+          "--tries=1",
+          "--spider",
+          "http://localhost:8080/v1/.well-known/ready",
+        ]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+      start_period: 10s
+    restart: unless-stopped
+
+volumes:
+  weaviate_data:
