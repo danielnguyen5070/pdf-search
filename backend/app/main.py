@@ -3,6 +3,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from app.api.chat import router as chat_router
 from app.api.documents import router as documents_router
 from app.config import get_settings
 from app.services.document_service import get_document_service
@@ -38,6 +39,7 @@ def create_app() -> FastAPI:
     )
 
     app.include_router(documents_router)
+    app.include_router(chat_router)
 
     @app.get("/health", tags=["health"])
     async def health() -> dict[str, str]:

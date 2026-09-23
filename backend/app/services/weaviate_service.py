@@ -152,3 +152,69 @@ def delete_chunks_by_document_id(document_id: str) -> int:
     if deleted is None:
         deleted = getattr(result, "matches", 0)
     return int(deleted or 0)
+
+
+def search_chunks(
+    document_id: str | None,
+    query: str,
+    *,
+    limit: int | None = None,
+) -> list[dict]:
+    """
+    Retrieve relevant DocumentChunk objects.
+
+    When document_id is set, filters to that document only.
+    When document_id is None, searches across all documents.
+
+    Uses Weaviate BM25 over `content`
+    (collection has no vectorizer yet — BM25 until embeddings are added).
+    Falls back to the first N chunks if BM25 returns nothing.
+    """
+    settings = get_settings()
+    top_k = limit if limit is not None else settings.rag_top_k
+
+    client = get_client()
+    if not client.collections.exists(COLLECTION_NAME):
+        return []
+
+    collection = client.collections.get(COLLECTION_NAME)
+    document_filter = (
+        Filter.by_property("document_id").equal(document_id)
+        if document_id
+        else None
+    )
+
+    try:
+        bm25_kwargs: dict = {"query": query, "limit": top_k}
+        if document_filter is not None:
+            bm25_kwargs["filters"] = document_filter
+        result = collection.query.bm25(**bm25_kwargs)
+        objects = list(result.objects)
+        if not objects:
+            fetch_kwargs: dict = {"limit": top_k}
+            if document_filter is not None:
+                fetch_kwargs["filters"] = document_filter
+            fallback = collection.query.fetch_objects(**fetch_kwargs)
+            objects = list(fallback.objects)
+    except WeaviateBaseError as exc:
+        scope = f"document {document_id}" if document_id else "all documents"
+        raise RuntimeError(f"Failed to search chunks for {scope}: {exc}") from exc
+
+    chunks: list[dict] = []
+    for obj in objects:
+        props = obj.properties or {}
+        content = props.get("content")
+        if not content:
+            continue
+        chunks.append(
+            {
+                "document_id": props.get("document_id", document_id or ""),
+                "filename": props.get("filename", ""),
+                "page_number": int(props.get("page_number") or 0),
+                "chunk_index": int(props.get("chunk_index") or 0),
+                "content": str(content),
+                "file_hash": props.get("file_hash", ""),
+                "version": int(props.get("version") or 1),
+            }
+        )
+    return chunks

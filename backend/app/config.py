@@ -23,6 +23,9 @@ class Settings(BaseSettings):
     cors_origins: str = "http://localhost:3000,http://127.0.0.1:3000"
     weaviate_url: str = "http://localhost:8080"
     weaviate_grpc_port: int = 50051
+    deepseek_api_key: str = ""
+    deepseek_model: str = "deepseek-chat"
+    rag_top_k: int = 3
 
     def cors_origin_list(self) -> list[str]:
         return [origin.strip() for origin in self.cors_origins.split(",") if origin.strip()]
