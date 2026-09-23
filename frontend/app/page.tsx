@@ -1,5 +1,5 @@
-import { DocumentsDashboard } from "@/components/documents/DocumentsDashboard";
+import { ChatWorkspace } from "@/components/chat/ChatWorkspace";
 
 export default function HomePage() {
-  return <DocumentsDashboard />;
+  return <ChatWorkspace />;
 }
