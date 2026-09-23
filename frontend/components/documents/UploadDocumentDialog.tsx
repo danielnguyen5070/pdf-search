@@ -14,14 +14,14 @@ import {
 import { Button } from "@/components/ui/button";
 import { uploadDocument } from "@/lib/api/documents";
 import { documentKeys } from "@/hooks/use-documents";
-import { formatDate, formatFileSize, getErrorMessage } from "@/lib/utils-app";
+import { formatFileSize, getErrorMessage } from "@/lib/utils-app";
 import { cn } from "@/lib/utils";
-import type { Document } from "@/types/api";
+import type { DocumentUploadResult } from "@/types/api";
 
 interface UploadDocumentDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onUploaded?: (document: Document) => void;
+  onUploaded?: (document: DocumentUploadResult) => void;
 }
 
 export function UploadDocumentDialog({
@@ -37,9 +37,8 @@ export function UploadDocumentDialog({
   const [validationError, setValidationError] = useState<string | null>(null);
   const [uploadError, setUploadError] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState(false);
-  const [uploadedDocument, setUploadedDocument] = useState<Document | null>(
-    null
-  );
+  const [uploadedDocument, setUploadedDocument] =
+    useState<DocumentUploadResult | null>(null);
 
   const reset = useCallback(() => {
     setFile(null);
@@ -133,7 +132,7 @@ export function UploadDocumentDialog({
               <div className="min-w-0 space-y-1">
                 <p className="text-sm font-medium">Upload successful</p>
                 <p className="text-xs text-muted-foreground">
-                  The PDF was saved by the server.
+                  Parsed, chunked, and stored in Weaviate.
                 </p>
               </div>
             </div>
@@ -146,20 +145,12 @@ export function UploadDocumentDialog({
                 </dd>
               </div>
               <div className="flex justify-between gap-4">
-                <dt className="text-muted-foreground">Size</dt>
-                <dd className="font-medium">
-                  {formatFileSize(uploadedDocument.size)}
-                </dd>
+                <dt className="text-muted-foreground">Status</dt>
+                <dd className="font-medium">{uploadedDocument.status}</dd>
               </div>
               <div className="flex justify-between gap-4">
-                <dt className="text-muted-foreground">Type</dt>
-                <dd className="font-medium">{uploadedDocument.content_type}</dd>
-              </div>
-              <div className="flex justify-between gap-4">
-                <dt className="text-muted-foreground">Uploaded</dt>
-                <dd className="font-medium">
-                  {formatDate(uploadedDocument.created_at)}
-                </dd>
+                <dt className="text-muted-foreground">Chunks</dt>
+                <dd className="font-medium">{uploadedDocument.chunks}</dd>
               </div>
               <div className="flex justify-between gap-4">
                 <dt className="shrink-0 text-muted-foreground">ID</dt>

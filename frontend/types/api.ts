@@ -4,6 +4,16 @@ export interface Document {
   content_type: string;
   size: number;
   created_at: string;
+  status?: string | null;
+  chunks?: number | null;
+  page_count?: number | null;
+}
+
+export interface DocumentUploadResult {
+  id: string;
+  filename: string;
+  status: "processed" | "failed";
+  chunks: number;
 }
 
 export interface ChatRequest {

@@ -1,5 +1,5 @@
 import { apiFetch } from "@/lib/api/client";
-import type { Document } from "@/types/api";
+import type { Document, DocumentUploadResult } from "@/types/api";
 
 export async function getDocuments(): Promise<Document[]> {
   const data = await apiFetch<Document[] | { documents: Document[] }>(
@@ -16,11 +16,11 @@ export async function getDocument(id: string): Promise<Document> {
  * Upload a PDF via multipart/form-data.
  * POST ${NEXT_PUBLIC_API_URL}/documents — field name: `file`
  */
-export async function uploadDocument(file: File): Promise<Document> {
+export async function uploadDocument(file: File): Promise<DocumentUploadResult> {
   const formData = new FormData();
   formData.append("file", file);
 
-  return apiFetch<Document>(
+  return apiFetch<DocumentUploadResult>(
     "/documents",
     {
       method: "POST",

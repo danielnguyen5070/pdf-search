@@ -1,3 +1,4 @@
+import hashlib
 import json
 import uuid
 from datetime import datetime, timezone
@@ -11,6 +12,9 @@ from fastapi import HTTPException, UploadFile, status
 from app.config import Settings, get_settings
 from app.services.chunk_service import chunk_pages
 from app.services.pdf_parser import parse_pdf
+from app.services.weaviate_service import delete_chunks_by_document_id, store_chunks
+
+DOCUMENT_VERSION = 1
 
 
 class DocumentService:
@@ -35,6 +39,12 @@ class DocumentService:
     def _write_metadata(self, data: dict[str, dict[str, Any]]) -> None:
         with self.settings.metadata_file.open("w", encoding="utf-8") as handle:
             json.dump(data, handle, indent=2, default=str)
+
+    def _save_metadata(self, record: dict[str, Any]) -> None:
+        with self._lock:
+            metadata = self._read_metadata()
+            metadata[record["id"]] = record
+            self._write_metadata(metadata)
 
     def _validate_pdf(self, file: UploadFile) -> None:
         filename = file.filename or ""
@@ -62,9 +72,15 @@ class DocumentService:
                 )
 
     async def upload(self, file: UploadFile) -> dict[str, Any]:
+        """
+        Upload PDF → local storage → PyMuPDF → chunking → Weaviate.
+
+        Only returns status=processed when parse + Weaviate storage succeed.
+        """
         self._validate_pdf(file)
 
         document_id = uuid.uuid4()
+        filename = file.filename or f"{document_id}.pdf"
         stored_filename = f"{document_id}.pdf"
         relative_path = self.settings.storage_dir / stored_filename
         absolute_path = relative_path.resolve()
@@ -76,36 +92,58 @@ class DocumentService:
                 detail="Uploaded file is empty.",
             )
 
-        # Basic magic-byte check for PDF
         if not content.startswith(b"%PDF"):
             raise HTTPException(
                 status_code=status.HTTP_415_UNSUPPORTED_MEDIA_TYPE,
                 detail="File content is not a valid PDF.",
             )
 
+        file_hash = hashlib.sha256(content).hexdigest()
         absolute_path.write_bytes(content)
 
-        # Parse + chunk in memory (no separate text/chunk files yet).
-        pages = parse_pdf(absolute_path, str(document_id))
-        chunks = chunk_pages(pages)
-
-        created_at = datetime.now(timezone.utc)
-        record: dict[str, Any] = {
+        created_at = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
+        base_record: dict[str, Any] = {
             "id": str(document_id),
-            "filename": file.filename,
+            "filename": filename,
             "content_type": self.settings.allowed_content_type,
             "size": len(content),
             "path": str(relative_path).replace("\\", "/"),
-            "created_at": created_at.isoformat().replace("+00:00", "Z"),
-            "page_count": len(pages),
-            "chunk_count": len(chunks),
+            "created_at": created_at,
+            "file_hash": file_hash,
+            "version": DOCUMENT_VERSION,
+            "status": "failed",
+            "page_count": 0,
+            "chunks": 0,
+            "chunk_count": 0,
         }
 
-        with self._lock:
-            metadata = self._read_metadata()
-            metadata[str(document_id)] = record
-            self._write_metadata(metadata)
+        try:
+            pages = parse_pdf(absolute_path, str(document_id))
+            chunks = chunk_pages(pages)
+            stored = store_chunks(
+                chunks,
+                filename=filename,
+                file_hash=file_hash,
+                version=DOCUMENT_VERSION,
+            )
+        except HTTPException:
+            self._save_metadata(base_record)
+            raise
+        except Exception as exc:
+            self._save_metadata(base_record)
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail=f"Failed to process PDF: {exc}",
+            ) from exc
 
+        record: dict[str, Any] = {
+            **base_record,
+            "status": "processed",
+            "page_count": len(pages),
+            "chunks": stored,
+            "chunk_count": stored,
+        }
+        self._save_metadata(record)
         return record
 
     def list_documents(self) -> list[dict[str, Any]]:
@@ -139,6 +177,38 @@ class DocumentService:
                 detail=f"File for document {document_id} is missing on disk.",
             )
         return file_path, record
+
+    def delete(self, document_id: UUID) -> dict[str, str]:
+        """
+        Delete PDF from storage and all matching Weaviate chunks.
+
+        Raises 404 if the document is not found in metadata.
+        """
+        record = self.get_document(document_id)
+        document_id_str = str(document_id)
+
+        file_path = Path(
+            record.get("path") or (self.settings.storage_dir / f"{document_id_str}.pdf")
+        )
+        if not file_path.is_absolute():
+            file_path = file_path.resolve()
+        if file_path.exists() and file_path.is_file():
+            file_path.unlink()
+
+        try:
+            delete_chunks_by_document_id(document_id_str)
+        except Exception as exc:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail=f"Failed to delete Weaviate chunks: {exc}",
+            ) from exc
+
+        with self._lock:
+            metadata = self._read_metadata()
+            metadata.pop(document_id_str, None)
+            self._write_metadata(metadata)
+
+        return {"id": document_id_str, "status": "deleted"}
 
 
 _document_service: DocumentService | None = None

@@ -26,6 +26,10 @@ export function DocumentCard({ document }: { document: Document }) {
       <CardContent className="space-y-1 text-sm text-muted-foreground">
         <p>{formatFileSize(document.size)}</p>
         <p>{formatDate(document.created_at)}</p>
+        {document.status && <p>Status: {document.status}</p>}
+        {typeof document.chunks === "number" && (
+          <p>{document.chunks} chunks</p>
+        )}
         <p className="truncate font-mono text-xs">{document.id}</p>
       </CardContent>
     </Card>
