@@ -1,10 +1,9 @@
 export interface Document {
   id: string;
   filename: string;
-  page_count: number;
+  content_type: string;
+  size: number;
   created_at: string;
-  status?: "processing" | "ready" | "failed";
-  file_url?: string;
 }
 
 export interface ChatRequest {

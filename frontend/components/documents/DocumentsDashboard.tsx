@@ -21,7 +21,7 @@ export function DocumentsDashboard() {
     <div className="min-h-screen bg-background">
       <header className="sticky top-0 z-20 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80">
         <div className="mx-auto flex h-14 max-w-6xl items-center justify-between px-4 sm:px-6">
-          <h1 className="text-lg font-semibold tracking-tight">ChatPDF</h1>
+          <h1 className="text-lg font-semibold tracking-tight">PDF Search</h1>
           <Button onClick={() => setUploadOpen(true)}>
             <Upload className="size-4" />
             Upload PDF
@@ -35,7 +35,7 @@ export function DocumentsDashboard() {
             Your Documents
           </h2>
           <p className="mt-1 text-sm text-muted-foreground">
-            Select a document to open the PDF viewer and start chatting.
+            Upload a PDF to store it on the server.
           </p>
         </div>
 

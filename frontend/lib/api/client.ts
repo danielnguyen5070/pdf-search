@@ -41,7 +41,21 @@ async function parseError(
   const resolvedCode =
     code ?? (status === 404 ? "not_found" : status === 0 ? "network" : "unknown");
 
-  return new ApiError(userFacingMessage(status, resolvedCode), status, resolvedCode);
+  let detail: string | undefined;
+  try {
+    const body = (await response.json()) as { detail?: unknown };
+    if (typeof body?.detail === "string" && body.detail.trim()) {
+      detail = body.detail;
+    }
+  } catch {
+    // ignore non-JSON error bodies
+  }
+
+  return new ApiError(
+    detail ?? userFacingMessage(status, resolvedCode),
+    status,
+    resolvedCode
+  );
 }
 
 export async function apiFetch<T>(

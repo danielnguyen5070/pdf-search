@@ -92,7 +92,6 @@ export function ChatPageClient({ documentId }: ChatPageClientProps) {
         >
           <PdfViewer
             documentId={documentId}
-            fileUrl={document.file_url}
             page={activePage}
           />
         </div>

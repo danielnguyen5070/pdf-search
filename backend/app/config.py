@@ -19,6 +19,11 @@ class Settings(BaseSettings):
     port: int = 8000
     allowed_content_type: str = "application/pdf"
     allowed_extension: str = ".pdf"
+    # Comma-separated origins for the Next.js frontend (CORS).
+    cors_origins: str = "http://localhost:3000,http://127.0.0.1:3000"
+
+    def cors_origin_list(self) -> list[str]:
+        return [origin.strip() for origin in self.cors_origins.split(",") if origin.strip()]
 
 
 @lru_cache

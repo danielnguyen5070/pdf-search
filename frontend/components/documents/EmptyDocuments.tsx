@@ -11,8 +11,7 @@ export function EmptyDocuments({ onUpload }: { onUpload: () => void }) {
       </div>
       <h2 className="text-lg font-medium tracking-tight">No documents yet</h2>
       <p className="mt-1.5 max-w-sm text-sm text-muted-foreground">
-        Upload a PDF to start chatting with your documents using AI-powered
-        retrieval.
+        Upload a PDF to get started. Only <code>.pdf</code> files are supported.
       </p>
       <Button className="mt-6" onClick={onUpload}>
         <Upload className="size-4" />

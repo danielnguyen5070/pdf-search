@@ -42,11 +42,11 @@ NEXT_PUBLIC_API_URL=http://localhost:8000/api/v1
 
 ```json
 {
-  "id": "doc_123",
+  "id": "550e8400-e29b-41d4-a716-446655440000",
   "filename": "book.pdf",
-  "page_count": 12,
-  "created_at": "2026-09-23T10:00:00Z",
-  "file_url": "optional absolute or relative PDF URL"
+  "content_type": "application/pdf",
+  "size": 123456,
+  "created_at": "2026-09-23T10:00:00Z"
 }
 ```
 

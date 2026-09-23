@@ -12,6 +12,10 @@ export async function getDocument(id: string): Promise<Document> {
   return apiFetch<Document>(`/documents/${id}`, {}, "not_found");
 }
 
+/**
+ * Upload a PDF via multipart/form-data.
+ * POST ${NEXT_PUBLIC_API_URL}/documents — field name: `file`
+ */
 export async function uploadDocument(file: File): Promise<Document> {
   const formData = new FormData();
   formData.append("file", file);
