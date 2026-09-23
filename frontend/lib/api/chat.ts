@@ -1,23 +1,55 @@
 import { getApiUrl } from "@/lib/api/client";
 import { ApiError } from "@/types/api";
-import type { ChatRequest } from "@/types/api";
+import type { ChatRequest, Source } from "@/types/api";
 
-export interface StreamChatHandlers {
+export interface StreamChatOptions {
+  documentId: string | null;
+  message: string;
   onToken?: (token: string) => void;
+  onDone?: (sources: Source[]) => void;
   onError?: (message: string) => void;
   signal?: AbortSignal;
 }
 
+type StreamEvent = {
+  type?: string;
+  content?: string;
+  sources?: Source[];
+};
+
+function normalizeSources(raw: unknown): Source[] {
+  if (!Array.isArray(raw)) return [];
+  return raw
+    .map((item) => {
+      if (!item || typeof item !== "object") return null;
+      const row = item as Record<string, unknown>;
+      const content = typeof row.content === "string" ? row.content : "";
+      if (!content.trim()) return null;
+      return {
+        document_id: String(row.document_id ?? ""),
+        filename: String(row.filename ?? "document.pdf"),
+        page: Number(row.page ?? 0) || 0,
+        content,
+      } satisfies Source;
+    })
+    .filter((source): source is Source => source !== null);
+}
+
 /**
- * POST /chat — SSE stream of token/error/done events.
- * document_id null searches across all documents.
+ * POST /chat — read the SSE stream with fetch + ReadableStream.
+ *
+ * documentId:
+ *   null → search all documents
+ *   id   → search only that document
  */
-export async function streamChat(
-  documentId: string | null,
-  message: string,
-  handlers: StreamChatHandlers = {}
-): Promise<string> {
-  const { onToken, onError, signal } = handlers;
+export async function streamChat({
+  documentId,
+  message,
+  onToken,
+  onDone,
+  onError,
+  signal,
+}: StreamChatOptions): Promise<{ answer: string; sources: Source[] }> {
   const body: ChatRequest = {
     document_id: documentId,
     message,
@@ -35,11 +67,10 @@ export async function streamChat(
     if (err instanceof DOMException && err.name === "AbortError") {
       throw err;
     }
-    throw new ApiError(
-      "Unable to connect to the server. Please make sure the backend is running.",
-      0,
-      "network"
-    );
+    const networkError =
+      "Unable to connect to the server. Please make sure the backend is running.";
+    onError?.(networkError);
+    throw new ApiError(networkError, 0, "network");
   }
 
   if (!response.ok) {
@@ -50,29 +81,33 @@ export async function streamChat(
         detail = errBody.detail;
       }
     } catch {
-      // ignore
+      // ignore non-JSON error bodies
     }
-    throw new ApiError(
+    const messageText =
       detail ??
-        "Something went wrong while processing your question. Please try again.",
+      "Something went wrong while processing your question. Please try again.";
+    onError?.(messageText);
+    throw new ApiError(
+      messageText,
       response.status,
       response.status === 404 ? "not_found" : "chat"
     );
   }
 
   if (!response.body) {
-    throw new ApiError(
-      "Something went wrong while processing your question. Please try again.",
-      0,
-      "chat"
-    );
+    const messageText =
+      "Something went wrong while processing your question. Please try again.";
+    onError?.(messageText);
+    throw new ApiError(messageText, 0, "chat");
   }
 
   const reader = response.body.getReader();
   const decoder = new TextDecoder();
   let buffer = "";
   let answer = "";
+  let sources: Source[] = [];
   let streamError: string | null = null;
+  let receivedDone = false;
 
   const processEvent = (raw: string) => {
     const lines = raw.split("\n");
@@ -82,9 +117,9 @@ export async function streamChat(
       const payload = trimmed.slice(5).trim();
       if (!payload || payload === "[DONE]") continue;
 
-      let event: { type?: string; content?: string };
+      let event: StreamEvent;
       try {
-        event = JSON.parse(payload) as { type?: string; content?: string };
+        event = JSON.parse(payload) as StreamEvent;
       } catch {
         continue;
       }
@@ -95,6 +130,10 @@ export async function streamChat(
       } else if (event.type === "error" && typeof event.content === "string") {
         streamError = event.content;
         onError?.(event.content);
+      } else if (event.type === "done") {
+        receivedDone = true;
+        sources = normalizeSources(event.sources);
+        onDone?.(sources);
       }
     }
   };
@@ -115,18 +154,21 @@ export async function streamChat(
     processEvent(buffer);
   }
 
+  if (!receivedDone) {
+    onDone?.(sources);
+  }
+
   if (streamError) {
     throw new ApiError(streamError, 500, "chat");
   }
 
-  return answer;
+  return { answer, sources };
 }
 
-/** Convenience wrapper that collects the full streamed answer. */
+/** Collect the full streamed answer (non-streaming callers). */
 export async function chatWithDocument(
   documentId: string | null,
   message: string
-): Promise<{ answer: string; sources: [] }> {
-  const answer = await streamChat(documentId, message);
-  return { answer, sources: [] };
+): Promise<{ answer: string; sources: Source[] }> {
+  return streamChat({ documentId, message });
 }

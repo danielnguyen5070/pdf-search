@@ -10,7 +10,7 @@ import { PdfViewer } from "@/components/pdf/PdfViewer";
 import { ErrorState } from "@/components/shared/ErrorState";
 import { LoadingState } from "@/components/shared/LoadingState";
 import { useDocument } from "@/hooks/use-documents";
-import { ApiError } from "@/types/api";
+import { ApiError, type Source } from "@/types/api";
 import { cn } from "@/lib/utils";
 
 interface ChatPageClientProps {
@@ -23,8 +23,8 @@ export function ChatPageClient({ documentId }: ChatPageClientProps) {
   const [activePage, setActivePage] = useState<number | null>(null);
   const [mobileTab, setMobileTab] = useState<"chat" | "pdf">("chat");
 
-  const handleSourceClick = (pageNumber: number) => {
-    setActivePage(pageNumber);
+  const handleSourceClick = (source: Source) => {
+    setActivePage(source.page > 0 ? source.page : null);
     setMobileTab("pdf");
   };
 

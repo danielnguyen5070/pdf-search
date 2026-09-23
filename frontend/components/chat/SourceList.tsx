@@ -5,7 +5,7 @@ import type { Source } from "@/types/api";
 
 interface SourceListProps {
   sources: Source[];
-  onSourceClick?: (pageNumber: number) => void;
+  onSourceClick?: (source: Source) => void;
 }
 
 export function SourceList({ sources, onSourceClick }: SourceListProps) {
@@ -19,7 +19,7 @@ export function SourceList({ sources, onSourceClick }: SourceListProps) {
       <div className="space-y-2">
         {sources.map((source, index) => (
           <SourceCard
-            key={`${source.page}-${index}`}
+            key={`${source.document_id}-${source.page}-${index}`}
             source={source}
             onClick={onSourceClick}
           />

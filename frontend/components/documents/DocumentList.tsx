@@ -24,14 +24,14 @@ export function DocumentList({
   const showAllOption = typeof onSelectAll === "function";
 
   return (
-    <div className="flex flex-col gap-1 p-2">
+    <div className="flex min-w-0 flex-col gap-1 overflow-hidden p-2">
       {showAllOption ? (
         <button
           type="button"
           aria-pressed={allDocumentsSelected}
           onClick={() => onSelectAll()}
           className={cn(
-            "group flex w-full cursor-pointer items-start gap-2.5 rounded-lg border px-2.5 py-2.5 text-left transition-colors",
+            "group flex w-full min-w-0 max-w-full cursor-pointer items-start gap-2.5 overflow-hidden rounded-lg border px-2.5 py-2.5 text-left transition-colors",
             allDocumentsSelected
               ? "border-foreground/20 bg-muted"
               : "border-transparent hover:bg-muted/60"
@@ -45,16 +45,18 @@ export function DocumentList({
           >
             <Library className="size-4 text-muted-foreground" />
           </div>
-          <div className="min-w-0 flex-1">
-            <p className="flex items-center gap-1.5 truncate text-sm font-medium leading-snug">
+          <div className="min-w-0 flex-1 overflow-hidden">
+            <div className="flex min-w-0 items-center gap-1.5">
               {allDocumentsSelected ? (
                 <span
                   className="inline-block size-1.5 shrink-0 rounded-full bg-foreground"
                   aria-hidden
                 />
               ) : null}
-              All Documents
-            </p>
+              <p className="truncate text-sm font-medium leading-snug">
+                All Documents
+              </p>
+            </div>
             <p className="mt-0.5 truncate text-xs text-muted-foreground">
               Search across every PDF
             </p>

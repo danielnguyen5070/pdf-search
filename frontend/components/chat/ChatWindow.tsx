@@ -5,11 +5,11 @@ import { ChatInput } from "@/components/chat/ChatInput";
 import { MessageList } from "@/components/chat/MessageList";
 import { useChat } from "@/hooks/use-documents";
 import { createMessageId } from "@/lib/utils-app";
-import type { ChatMessage } from "@/types/api";
+import type { ChatMessage, Source } from "@/types/api";
 
 interface ChatWindowProps {
   documentId: string;
-  onSourceClick?: (pageNumber: number) => void;
+  onSourceClick?: (source: Source) => void;
 }
 
 export function ChatWindow({ documentId, onSourceClick }: ChatWindowProps) {

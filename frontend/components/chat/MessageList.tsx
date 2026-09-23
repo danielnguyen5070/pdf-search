@@ -3,11 +3,11 @@
 import { useEffect, useRef } from "react";
 import { ChatMessage } from "@/components/chat/ChatMessage";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import type { ChatMessage as ChatMessageType } from "@/types/api";
+import type { ChatMessage as ChatMessageType, Source } from "@/types/api";
 
 interface MessageListProps {
   messages: ChatMessageType[];
-  onSourceClick?: (pageNumber: number) => void;
+  onSourceClick?: (source: Source) => void;
 }
 
 export function MessageList({ messages, onSourceClick }: MessageListProps) {

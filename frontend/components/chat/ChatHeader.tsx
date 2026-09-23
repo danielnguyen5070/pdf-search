@@ -18,10 +18,10 @@ export function ChatHeader({
   const Icon = allDocuments ? Library : MessageSquare;
 
   return (
-    <header className="flex h-14 shrink-0 items-center justify-between gap-3 border-b border-border px-4">
-      <div className="flex min-w-0 items-center gap-2">
+    <header className="flex h-14 min-w-0 shrink-0 items-center justify-between gap-3 overflow-hidden border-b border-border px-4">
+      <div className="flex min-w-0 items-center gap-2 overflow-hidden">
         <Icon className="size-4 shrink-0 text-muted-foreground" />
-        <div className="min-w-0">
+        <div className="min-w-0 flex-1 overflow-hidden">
           <h2 className="truncate text-sm font-semibold tracking-tight">
             {allDocuments
               ? "All Documents"

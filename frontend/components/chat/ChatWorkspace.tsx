@@ -70,13 +70,13 @@ export function ChatWorkspace() {
   return (
     <div className="flex h-dvh min-h-0 overflow-hidden bg-background">
       {/* Desktop sidebar */}
-      <div className="hidden h-full w-[300px] shrink-0 border-r border-border md:flex">
+      <aside className="hidden h-full w-[320px] shrink-0 overflow-hidden border-r border-border md:flex md:flex-col">
         <DocumentsSidebar {...sidebarProps} />
-      </div>
+      </aside>
 
       {/* Mobile documents drawer */}
       <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
-        <SheetContent side="left" className="p-0" showCloseButton>
+        <SheetContent side="left" className="w-[min(100%,20rem)] max-w-[85vw] overflow-hidden p-0" showCloseButton>
           <SheetHeader className="sr-only">
             <SheetTitle>Documents</SheetTitle>
             <SheetDescription>Select or upload a PDF</SheetDescription>
@@ -85,22 +85,24 @@ export function ChatWorkspace() {
         </SheetContent>
       </Sheet>
 
-      <ChatPanel
-        document={selectedDocument}
-        selectedDocumentId={selectedDocumentId}
-        headerActions={
-          <Button
-            type="button"
-            variant="outline"
-            size="icon-sm"
-            className="md:hidden"
-            onClick={() => setMobileOpen(true)}
-            aria-label="Open documents"
-          >
-            <Menu className="size-4" />
-          </Button>
-        }
-      />
+      <main className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
+        <ChatPanel
+          document={selectedDocument}
+          selectedDocumentId={selectedDocumentId}
+          headerActions={
+            <Button
+              type="button"
+              variant="outline"
+              size="icon-sm"
+              className="md:hidden"
+              onClick={() => setMobileOpen(true)}
+              aria-label="Open documents"
+            >
+              <Menu className="size-4" />
+            </Button>
+          }
+        />
+      </main>
 
       <UploadDocumentDialog
         open={uploadOpen}

@@ -5,8 +5,9 @@ import { ChatHeader } from "@/components/chat/ChatHeader";
 import { ChatInput } from "@/components/chat/ChatInput";
 import { ChatMessageList } from "@/components/chat/ChatMessageList";
 import { streamChat } from "@/lib/api/chat";
+import { getDocumentFileUrl } from "@/lib/api/client";
 import { createMessageId, getErrorMessage } from "@/lib/utils-app";
-import type { ChatMessage, Document } from "@/types/api";
+import type { ChatMessage, Document, Source } from "@/types/api";
 
 interface ChatPanelProps {
   document: Document | null;
@@ -38,6 +39,15 @@ export function ChatPanel({
     };
   }, []);
 
+  const handleSourceClick = (source: Source) => {
+    if (!source.document_id) return;
+    window.open(
+      getDocumentFileUrl(source.document_id, source.page || undefined),
+      "_blank",
+      "noopener,noreferrer"
+    );
+  };
+
   const handleSubmit = async (content: string) => {
     if (isSending) return;
 
@@ -61,7 +71,9 @@ export function ChatPanel({
     abortRef.current = controller;
 
     try {
-      await streamChat(selectedDocumentId, content, {
+      await streamChat({
+        documentId: selectedDocumentId,
+        message: content,
         signal: controller.signal,
         onToken: (token) => {
           setMessages((prev) =>
@@ -76,21 +88,23 @@ export function ChatPanel({
             )
           );
         },
+        onDone: (sources) => {
+          setMessages((prev) =>
+            prev.map((msg) =>
+              msg.id === assistantId
+                ? {
+                    ...msg,
+                    isLoading: false,
+                    sources,
+                    content:
+                      msg.content.trim() ||
+                      "I could not find an answer in the documents.",
+                  }
+                : msg
+            )
+          );
+        },
       });
-
-      setMessages((prev) =>
-        prev.map((msg) =>
-          msg.id === assistantId
-            ? {
-                ...msg,
-                isLoading: false,
-                content:
-                  msg.content.trim() ||
-                  "I could not find an answer in the documents.",
-              }
-            : msg
-        )
-      );
     } catch (err) {
       if (err instanceof DOMException && err.name === "AbortError") {
         return;
@@ -120,7 +134,7 @@ export function ChatPanel({
   };
 
   return (
-    <section className="flex h-full min-h-0 flex-1 flex-col bg-background">
+    <section className="flex h-full min-h-0 min-w-0 flex-1 flex-col overflow-hidden bg-background">
       <ChatHeader
         document={document}
         allDocuments={selectedDocumentId === null}
@@ -131,6 +145,7 @@ export function ChatPanel({
           messages={messages}
           allDocuments={selectedDocumentId === null}
           documentName={document?.filename ?? null}
+          onSourceClick={handleSourceClick}
         />
       </div>
       <ChatInput

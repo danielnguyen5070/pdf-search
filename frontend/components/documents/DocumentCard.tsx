@@ -69,7 +69,7 @@ export function DocumentCard({
           }
         }}
         className={cn(
-          "group flex w-full cursor-pointer items-start gap-2.5 rounded-lg border px-2.5 py-2.5 text-left transition-colors",
+          "group flex w-full min-w-0 max-w-full cursor-pointer items-start gap-2.5 overflow-hidden rounded-lg border px-2.5 py-2.5 text-left transition-colors",
           selected
             ? "border-foreground/20 bg-muted"
             : "border-transparent hover:bg-muted/60",
@@ -85,16 +85,18 @@ export function DocumentCard({
           <FileText className="size-4 text-muted-foreground" />
         </div>
 
-        <div className="min-w-0 flex-1">
-          <p className="flex items-center gap-1.5 truncate text-sm font-medium leading-snug">
+        <div className="min-w-0 flex-1 overflow-hidden">
+          <div className="flex min-w-0 items-center gap-1.5">
             {selected ? (
               <span
                 className="inline-block size-1.5 shrink-0 rounded-full bg-foreground"
                 aria-hidden
               />
             ) : null}
-            {document.filename}
-          </p>
+            <p className="truncate text-sm font-medium leading-snug">
+              {document.filename}
+            </p>
+          </div>
           <p className="mt-0.5 truncate text-xs text-muted-foreground">
             {formatFileSize(document.size)} · {formatDate(document.created_at)}
           </p>

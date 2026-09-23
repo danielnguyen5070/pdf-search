@@ -28,6 +28,8 @@ export interface ChatRequest {
 }
 
 export interface Source {
+  document_id: string;
+  filename: string;
   page: number;
   content: string;
 }
